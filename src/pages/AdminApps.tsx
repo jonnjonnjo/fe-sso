@@ -8,6 +8,7 @@ export default function AdminApps() {
   const [apps, setApps] = useState<App[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -37,22 +38,28 @@ export default function AdminApps() {
   useEffect(() => { if (selectedUser) loadUserApps(selectedUser); else setUserApps([]); }, [selectedUser]);
 
   const create = async () => {
-    await api.post("/applications", { name, url: url || null });
-    setName(""); setUrl(""); loadApps();
+    if (!name.trim()) { setToast("Name is required"); setTimeout(() => setToast(""), 2000); return; }
+    try {
+      await api.post("/applications", { name, url: url || null });
+      setName(""); setUrl(""); setToast("Application created"); setTimeout(() => setToast(""), 2000); loadApps();
+    } catch (e: any) { setToast(e.response?.data?.message || "Create failed"); setTimeout(() => setToast(""), 2000); }
   };
 
   const grant = async () => {
-    await api.post(`/users/${selectedUser}/applications`, { applicationId: grantAppId });
-    loadUserApps(selectedUser);
+    try {
+      await api.post(`/users/${selectedUser}/applications`, { applicationId: grantAppId });
+      setToast("Access granted"); setTimeout(() => setToast(""), 2000); loadUserApps(selectedUser);
+    } catch (e: any) { setToast(e.response?.data?.message || "Grant failed"); setTimeout(() => setToast(""), 2000); }
   };
 
   const revoke = async (appId: string) => {
     await api.delete(`/users/${selectedUser}/applications/${appId}`);
-    loadUserApps(selectedUser);
+    setToast("Access revoked"); setTimeout(() => setToast(""), 2000); loadUserApps(selectedUser);
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
+      {toast && <div className="fixed top-4 right-4 bg-zinc-900 text-white text-sm rounded-lg px-4 py-2 shadow-lg z-50">{toast}</div>}
       <h1 className="text-lg font-semibold">Admin — Applications</h1>
 
       <section className="bg-white border border-zinc-200 rounded-lg p-4 space-y-3">

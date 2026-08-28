@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
@@ -19,9 +19,9 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
           <Route path="/yellow-pages" element={<ProtectedRoute><YellowPages /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-          <Route path="/admin/apps" element={<ProtectedRoute><AdminApps /></ProtectedRoute>} />
-          <Route path="/admin/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><RoleRoute role="Admin"><AdminUsers /></RoleRoute></ProtectedRoute>} />
+          <Route path="/admin/apps" element={<ProtectedRoute><RoleRoute role="Admin"><AdminApps /></RoleRoute></ProtectedRoute>} />
+          <Route path="/admin/audit-logs" element={<ProtectedRoute><RoleRoute role="Admin"><AuditLogs /></RoleRoute></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -7,6 +7,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
   const [form, setForm] = useState({ username: "", password: "" });
   const [editing, setEditing] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE", roleId: "" });
@@ -22,9 +23,17 @@ export default function AdminUsers() {
   useEffect(() => { load(); }, []);
 
   const create = async () => {
-    await api.post("/users", form);
-    setForm({ username: "", password: "" });
-    load();
+    if (!form.username.trim() || !form.password.trim()) {
+      setToast("Username and password are required"); setTimeout(() => setToast(""), 2000); return;
+    }
+    try {
+      await api.post("/users", form);
+      setForm({ username: "", password: "" });
+      setToast("User created"); setTimeout(() => setToast(""), 2000);
+      load();
+    } catch (e: any) {
+      setToast(e.response?.data?.message || "Create failed"); setTimeout(() => setToast(""), 2000);
+    }
   };
 
   const startEdit = (u: User) => {
@@ -43,9 +52,11 @@ export default function AdminUsers() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-lg font-semibold">Admin — Users</h1>
 
+      {toast && <div className="bg-zinc-900 text-white text-sm rounded-lg px-3 py-2">{toast}</div>}
+
       <div className="bg-white border border-zinc-200 rounded-lg p-4 flex gap-2">
         <input placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1" />
-        <input placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1" />
+        <input type="password" placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1" />
         <button onClick={create} className="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm">Create</button>
       </div>
 

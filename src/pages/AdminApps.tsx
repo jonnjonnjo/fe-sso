@@ -7,6 +7,7 @@ type User = { id: string; username: string };
 export default function AdminApps() {
   const [apps, setApps] = useState<App[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -14,8 +15,11 @@ export default function AdminApps() {
   const [grantAppId, setGrantAppId] = useState("");
 
   const loadApps = async () => {
-    const res = await api.get("/applications");
-    setApps(res.data.data);
+    setLoading(true);
+    try {
+      const res = await api.get("/applications");
+      setApps(res.data.data);
+    } finally { setLoading(false); }
   };
   const loadUsers = async () => {
     const res = await api.get("/users");
@@ -57,7 +61,9 @@ export default function AdminApps() {
           <button onClick={create} className="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm">Create</button>
         </div>
         <div className="space-y-2">
-          {apps.map(a => (
+          {loading ? (
+            [...Array(3)].map((_, i) => <div key={i} className="h-10 bg-zinc-100 rounded animate-pulse" />)
+          ) : apps.map(a => (
             <div key={a.id} className="flex items-center justify-between border border-zinc-200 rounded-lg px-3 py-2 text-sm">
               <span>{a.name} <span className="text-zinc-500">{a.url}</span></span>
               <span className="text-xs text-zinc-500">{a.id.slice(0, 8)}</span>

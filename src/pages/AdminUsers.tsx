@@ -5,13 +5,17 @@ type User = { id: string; username: string; activeStatus: string; role: { id: st
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ username: "", password: "" });
   const [editing, setEditing] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE" });
 
   const load = async () => {
-    const res = await api.get("/users");
-    setUsers(res.data.data);
+    setLoading(true);
+    try {
+      const res = await api.get("/users");
+      setUsers(res.data.data);
+    } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -47,12 +51,15 @@ export default function AdminUsers() {
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 border-b"><tr><th className="text-left p-3">Username</th><th className="text-left p-3">Role</th><th className="text-left p-3">Status</th><th className="text-left p-3">Actions</th></tr></thead>
           <tbody>
-            {users.map(u => (
+            {loading ? (
+              [...Array(4)].map((_, i) => <tr key={i} className="border-b"><td colSpan={4} className="p-3"><div className="h-4 bg-zinc-100 rounded animate-pulse" /></td></tr>)
+            ) : users.map(u => (
               <tr key={u.id} className="border-b border-zinc-100">
                 <td className="p-3">{u.username}</td><td className="p-3">{u.role.name}</td><td className="p-3">{u.activeStatus}</td>
                 <td className="p-3"><button onClick={() => startEdit(u)} className="text-sm border border-zinc-300 rounded px-3 py-1">Edit</button></td>
               </tr>
             ))}
+            {!loading && users.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-zinc-500">No users</td></tr>}
           </tbody>
         </table>
       </div>

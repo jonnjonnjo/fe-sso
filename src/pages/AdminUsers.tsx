@@ -48,6 +48,17 @@ export default function AdminUsers() {
     load();
   };
 
+  const del = async (id: string) => {
+    if (!confirm("Delete this user?")) return;
+    try {
+      await api.delete(`/users/${id}`);
+      setToast("User deleted"); setTimeout(() => setToast(""), 2000);
+      load();
+    } catch (e: any) {
+      setToast(e.response?.data?.message || "Delete failed"); setTimeout(() => setToast(""), 2000);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-lg font-semibold">Admin — Users</h1>
@@ -69,7 +80,10 @@ export default function AdminUsers() {
             ) : users.map(u => (
               <tr key={u.id} className="border-b border-zinc-100">
                 <td className="p-3">{u.username}</td><td className="p-3">{u.role.name}</td><td className="p-3">{u.activeStatus}</td>
-                <td className="p-3"><button onClick={() => startEdit(u)} className="text-sm border border-zinc-300 rounded px-3 py-1">Edit</button></td>
+                <td className="p-3 flex gap-2">
+                  <button onClick={() => startEdit(u)} className="text-sm border border-zinc-300 rounded px-3 py-1">Edit</button>
+                  <button onClick={() => del(u.id)} className="text-sm border border-red-300 text-red-600 rounded px-3 py-1">Delete</button>
+                </td>
               </tr>
             ))}
             {!loading && users.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-zinc-500">No users</td></tr>}

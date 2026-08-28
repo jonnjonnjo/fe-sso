@@ -100,7 +100,7 @@ export default function YellowPages() {
         </select>
       </div>
 
-      {toast && <div className="bg-zinc-900 text-white text-sm rounded-lg px-3 py-2">{toast}</div>}
+      {toast && <div className="fixed top-4 right-4 bg-zinc-900 text-white text-sm rounded-lg px-4 py-2 shadow-lg z-50">{toast}</div>}
 
       <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

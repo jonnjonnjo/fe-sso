@@ -10,6 +10,8 @@ export default function YellowPages() {
   const [data, setData] = useState<Contact[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20 });
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
@@ -20,13 +22,21 @@ export default function YellowPages() {
   })();
 
   const load = async () => {
-    const res = await api.get("/contacts", { params: { q: q || undefined, department: department || undefined, location: location || undefined, page, limit: 20 } });
-    setData(res.data.data);
-    setMeta(res.data.meta);
+    setLoading(true);
+    try {
+      const res = await api.get("/contacts", { params: { q: q || undefined, department: department || undefined, location: location || undefined, page, limit: 20 } });
+      setData(res.data.data);
+      setMeta(res.data.meta);
+    } finally { setLoading(false); }
   };
 
+  // debounce search
+  useEffect(() => {
+    const t = setTimeout(() => { setPage(1); load(); }, 300);
+    return () => clearTimeout(t);
+  }, [q, department, location]);
+
   useEffect(() => { load().catch(() => {}); }, [page]);
-  useEffect(() => { setPage(1); }, [q, department, location]);
 
   const openDetail = async (id: string) => {
     const res = await api.get(`/contacts/${id}`);
@@ -37,6 +47,7 @@ export default function YellowPages() {
     await api.post("/contacts", form);
     setShowCreate(false);
     setForm({ name: "", employeeId: "", department: "", position: "", email: "", phone: "", location: "" });
+    setToast("Contact created"); setTimeout(() => setToast(""), 2000);
     load();
   };
 
@@ -44,6 +55,7 @@ export default function YellowPages() {
     if (!confirm("Deactivate this contact?")) return;
     await api.patch(`/contacts/${id}/deactivate`);
     setSelected(null);
+    setToast("Deactivated"); setTimeout(() => setToast(""), 2000);
     load();
   };
 
@@ -63,6 +75,7 @@ export default function YellowPages() {
       location: editing.location,
     });
     setEditing(null);
+    setToast("Updated"); setTimeout(() => setToast(""), 2000);
     load();
   };
 
@@ -73,26 +86,31 @@ export default function YellowPages() {
         {isAdmin && <button onClick={() => setShowCreate(true)} className="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm">Add contact</button>}
       </div>
       <div className="flex gap-2 flex-wrap">
-        <input placeholder="Search name or ID" value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && load()} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px]" />
+        <input placeholder="Search name or ID" value={q} onChange={e => setQ(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px]" />
         <select value={department} onChange={e => setDepartment(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm">
           <option value="">All departments</option><option>Engineering</option><option>HR</option><option>Finance</option><option>Marketing</option>
         </select>
         <select value={location} onChange={e => setLocation(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm">
           <option value="">All locations</option><option>Jakarta</option><option>Bandung</option><option>Surabaya</option>
         </select>
-        <button onClick={load} className="bg-zinc-900 text-white rounded-lg px-4 py-2 text-sm">Search</button>
       </div>
+
+      {toast && <div className="bg-zinc-900 text-white text-sm rounded-lg px-3 py-2">{toast}</div>}
 
       <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 border-b border-zinc-200"><tr><th className="text-left p-3 font-medium">Name</th><th className="text-left p-3 font-medium">ID</th><th className="text-left p-3 font-medium">Dept</th><th className="text-left p-3 font-medium">Location</th><th className="text-left p-3 font-medium">Status</th></tr></thead>
           <tbody>
-            {data.map(c => (
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <tr key={i} className="border-b border-zinc-100"><td colSpan={5} className="p-3"><div className="h-4 bg-zinc-100 rounded animate-pulse" /></td></tr>
+              ))
+            ) : data.map(c => (
               <tr key={c.id} onClick={() => openDetail(c.id)} className="border-b border-zinc-100 hover:bg-zinc-50 cursor-pointer">
                 <td className="p-3">{c.name}</td><td className="p-3 text-zinc-500">{c.employeeId}</td><td className="p-3">{c.department}</td><td className="p-3">{c.location}</td><td className="p-3">{c.status}</td>
               </tr>
             ))}
-            {data.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-zinc-500">No contacts</td></tr>}
+            {!loading && data.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-zinc-500">No contacts</td></tr>}
           </tbody>
         </table>
       </div>

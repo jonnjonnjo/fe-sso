@@ -8,6 +8,7 @@ export default function AdminUsers() {
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
+  const [q, setQ] = useState("");
   const [form, setForm] = useState({ username: "", password: "" });
   const [editing, setEditing] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE", roleId: "" });
@@ -15,11 +16,12 @@ export default function AdminUsers() {
   const load = async () => {
     setLoading(true);
     try {
-      const [uRes, rRes] = await Promise.all([api.get("/users"), api.get("/roles")]);
+      const [uRes, rRes] = await Promise.all([api.get("/users", { params: { q: q || undefined } }), api.get("/roles")]);
       setUsers(uRes.data.data);
       setRoles(rRes.data.data);
     } finally { setLoading(false); }
   };
+  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [q]);
   useEffect(() => { load(); }, []);
 
   const create = async () => {
@@ -63,7 +65,11 @@ export default function AdminUsers() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-lg font-semibold">Admin — Users</h1>
 
-      {toast && <div className="bg-zinc-900 text-white text-sm rounded-lg px-3 py-2">{toast}</div>}
+      {toast && <div className="fixed top-4 right-4 bg-zinc-900 text-white text-sm rounded-lg px-4 py-2 shadow-lg z-50">{toast}</div>}
+
+      <div className="flex gap-2">
+        <input placeholder="Search username" value={q} onChange={e => setQ(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1" />
+      </div>
 
       <div className="bg-white border border-zinc-200 rounded-lg p-4 flex gap-2">
         <input placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1" />

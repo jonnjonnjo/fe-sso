@@ -88,7 +88,7 @@ export default function AdminApps() {
                 {users.filter(u => u.username.toLowerCase().includes(userQuery.toLowerCase())).slice(0, 8).map(u => (
                   <button
                     key={u.id}
-                    onClick={() => { setSelectedUser(u.id); setUserQuery(u.username); }}
+                    onClick={() => { setSelectedUser(u.id); setUserQuery(""); }}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 ${selectedUser === u.id ? "bg-zinc-100" : ""}`}
                   >
                     {u.username}

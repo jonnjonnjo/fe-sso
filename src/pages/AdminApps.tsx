@@ -11,6 +11,7 @@ export default function AdminApps() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
+  const [userQuery, setUserQuery] = useState("");
   const [userApps, setUserApps] = useState<App[]>([]);
   const [grantAppId, setGrantAppId] = useState("");
 
@@ -75,10 +76,30 @@ export default function AdminApps() {
       <section className="bg-white border border-zinc-200 rounded-lg p-4 space-y-3">
         <h2 className="font-medium text-sm">Grant access — Admin decides</h2>
         <div className="flex gap-2">
-          <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1">
-            <option value="">Select user</option>
-            {users.map(u => <option key={u.id} value={u.id}>{u.username}</option>)}
-          </select>
+          <div className="flex-1 relative">
+            <input
+              placeholder="Search user by name"
+              value={userQuery}
+              onChange={e => setUserQuery(e.target.value)}
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm"
+            />
+            {userQuery && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow max-h-40 overflow-auto">
+                {users.filter(u => u.username.toLowerCase().includes(userQuery.toLowerCase())).slice(0, 8).map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => { setSelectedUser(u.id); setUserQuery(u.username); }}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 ${selectedUser === u.id ? "bg-zinc-100" : ""}`}
+                  >
+                    {u.username}
+                  </button>
+                ))}
+                {users.filter(u => u.username.toLowerCase().includes(userQuery.toLowerCase())).length === 0 && (
+                  <div className="px-3 py-2 text-sm text-zinc-500">No match</div>
+                )}
+              </div>
+            )}
+          </div>
           <select value={grantAppId} onChange={e => setGrantAppId(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm flex-1">
             <option value="">Select app</option>
             {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -87,7 +108,7 @@ export default function AdminApps() {
         </div>
         {selectedUser && (
           <div className="space-y-2">
-            <p className="text-xs text-zinc-500">Apps for selected user:</p>
+            <p className="text-xs text-zinc-500">Apps for {users.find(u => u.id === selectedUser)?.username}:</p>
             {userApps.map(a => (
               <div key={a.id} className="flex items-center justify-between border border-zinc-200 rounded-lg px-3 py-2 text-sm">
                 <span>{a.name}</span>

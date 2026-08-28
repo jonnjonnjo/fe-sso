@@ -5,16 +5,18 @@ type User = { id: string; username: string; activeStatus: string; role: { id: st
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ username: "", password: "" });
   const [editing, setEditing] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE" });
+  const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE", roleId: "" });
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/users");
-      setUsers(res.data.data);
+      const [uRes, rRes] = await Promise.all([api.get("/users"), api.get("/roles")]);
+      setUsers(uRes.data.data);
+      setRoles(rRes.data.data);
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
@@ -27,7 +29,7 @@ export default function AdminUsers() {
 
   const startEdit = (u: User) => {
     setEditing(u);
-    setEditForm({ username: u.username, activeStatus: u.activeStatus });
+    setEditForm({ username: u.username, activeStatus: u.activeStatus, roleId: u.role.id });
   };
 
   const saveEdit = async () => {
@@ -68,10 +70,22 @@ export default function AdminUsers() {
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-3">
             <h2 className="font-medium">Edit {editing.username}</h2>
-            <input value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
-            <select value={editForm.activeStatus} onChange={e => setEditForm({ ...editForm, activeStatus: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm">
-              <option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option>
-            </select>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Username</label>
+              <input value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Role</label>
+              <select value={editForm.roleId} onChange={e => setEditForm({ ...editForm, roleId: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm">
+                {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Status</label>
+              <select value={editForm.activeStatus} onChange={e => setEditForm({ ...editForm, activeStatus: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm">
+                <option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button onClick={() => setEditing(null)} className="flex-1 border border-zinc-300 rounded-lg py-2 text-sm">Cancel</button>
               <button onClick={saveEdit} className="flex-1 bg-zinc-900 text-white rounded-lg py-2 text-sm">Save</button>

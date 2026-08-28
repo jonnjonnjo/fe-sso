@@ -7,9 +7,11 @@ export default function YellowPages() {
   const [q, setQ] = useState("");
   const [department, setDepartment] = useState("");
   const [location, setLocation] = useState("");
+  const [status, setStatus] = useState("");
   const [data, setData] = useState<Contact[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20 });
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
@@ -24,7 +26,7 @@ export default function YellowPages() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/contacts", { params: { q: q || undefined, department: department || undefined, location: location || undefined, page, limit: 20 } });
+      const res = await api.get("/contacts", { params: { q: q || undefined, department: department || undefined, location: location || undefined, status: status || undefined, page, limit } });
       setData(res.data.data);
       setMeta(res.data.meta);
     } finally { setLoading(false); }
@@ -34,7 +36,7 @@ export default function YellowPages() {
   useEffect(() => {
     const t = setTimeout(() => { setPage(1); load(); }, 300);
     return () => clearTimeout(t);
-  }, [q, department, location]);
+  }, [q, department, location, status, limit]);
 
   useEffect(() => { load().catch(() => {}); }, [page]);
 
@@ -93,6 +95,9 @@ export default function YellowPages() {
         <select value={location} onChange={e => setLocation(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm">
           <option value="">All locations</option><option>Jakarta</option><option>Bandung</option><option>Surabaya</option>
         </select>
+        <select value={status} onChange={e => setStatus(e.target.value)} className="border border-zinc-300 rounded-lg px-3 py-2 text-sm">
+          <option value="">All statuses</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option>
+        </select>
       </div>
 
       {toast && <div className="bg-zinc-900 text-white text-sm rounded-lg px-3 py-2">{toast}</div>}
@@ -107,7 +112,7 @@ export default function YellowPages() {
               ))
             ) : data.map(c => (
               <tr key={c.id} onClick={() => openDetail(c.id)} className="border-b border-zinc-100 hover:bg-zinc-50 cursor-pointer">
-                <td className="p-3">{c.name}</td><td className="p-3 text-zinc-500">{c.employeeId}</td><td className="p-3">{c.department}</td><td className="p-3">{c.location}</td><td className="p-3">{c.status}</td>
+                <td className="p-3">{c.name}</td><td className="p-3 text-zinc-500">{c.employeeId}</td><td className="p-3">{c.department}</td><td className="p-3">{c.location}</td><td className="p-3"><span className={`px-2 py-1 rounded text-xs ${c.status === "ACTIVE" ? "bg-green-50 text-green-700 border border-green-200" : "bg-zinc-100 text-zinc-600 border"}`}>{c.status}</span></td>
               </tr>
             ))}
             {!loading && data.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-zinc-500">No contacts</td></tr>}
@@ -115,7 +120,15 @@ export default function YellowPages() {
         </table>
       </div>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-zinc-500">Total {meta.total}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-zinc-500">Total {meta.total}</span>
+          <span className="text-zinc-300">·</span>
+          <label className="text-zinc-500">Show</label>
+          <select value={limit} onChange={e => { setLimit(parseInt(e.target.value)); setPage(1); }} className="border border-zinc-300 rounded-lg px-2 py-1 text-sm">
+            <option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
+          </select>
+          <span className="text-zinc-500">per page</span>
+        </div>
         <div className="flex gap-2">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 disabled:opacity-50">Prev</button>
           <span className="px-3 py-1.5">Page {meta.page}</span>
@@ -148,13 +161,28 @@ export default function YellowPages() {
 
       {editing && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-3">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-4">
             <h2 className="font-semibold">Edit contact</h2>
-            <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
-            <input value={editing.department} onChange={e => setEditing({ ...editing, department: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
-            <input value={editing.position} onChange={e => setEditing({ ...editing, position: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
-            <input value={editing.email || ""} onChange={e => setEditing({ ...editing, email: e.target.value })} placeholder="Email" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
-            <input value={editing.location || ""} onChange={e => setEditing({ ...editing, location: e.target.value })} placeholder="Location" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Name *</label>
+              <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Department *</label>
+              <input value={editing.department} onChange={e => setEditing({ ...editing, department: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Position *</label>
+              <input value={editing.position} onChange={e => setEditing({ ...editing, position: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Email</label>
+              <input value={editing.email || ""} onChange={e => setEditing({ ...editing, email: e.target.value })} placeholder="email@company.com" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">Location</label>
+              <input value={editing.location || ""} onChange={e => setEditing({ ...editing, location: e.target.value })} placeholder="Jakarta" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            </div>
             <div className="flex gap-2">
               <button onClick={() => setEditing(null)} className="flex-1 border border-zinc-300 rounded-lg py-2 text-sm">Cancel</button>
               <button onClick={saveEdit} className="flex-1 bg-zinc-900 text-white rounded-lg py-2 text-sm">Save</button>

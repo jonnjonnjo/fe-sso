@@ -12,6 +12,7 @@ export default function YellowPages() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Contact | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<Contact | null>(null);
   const [form, setForm] = useState({ name: "", employeeId: "", department: "", position: "", email: "", phone: "", location: "" });
 
   const isAdmin = (() => {
@@ -43,6 +44,25 @@ export default function YellowPages() {
     if (!confirm("Deactivate this contact?")) return;
     await api.patch(`/contacts/${id}/deactivate`);
     setSelected(null);
+    load();
+  };
+
+  const startEdit = (c: Contact) => {
+    setEditing(c);
+    setSelected(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    await api.patch(`/contacts/${editing.id}`, {
+      name: editing.name,
+      department: editing.department,
+      position: editing.position,
+      email: editing.email,
+      phone: editing.phone,
+      location: editing.location,
+    });
+    setEditing(null);
     load();
   };
 
@@ -97,8 +117,30 @@ export default function YellowPages() {
               <div>Location: {selected.location || "-"}</div>
               <div>Status: {selected.status}</div>
             </div>
-            {isAdmin && selected.status === "ACTIVE" && <button onClick={() => deactivate(selected.id)} className="w-full bg-red-600 text-white rounded-lg py-2 text-sm">Deactivate</button>}
+            {isAdmin && (
+              <div className="flex gap-2">
+                <button onClick={() => startEdit(selected)} className="flex-1 border border-zinc-300 rounded-lg py-2 text-sm">Edit</button>
+                {selected.status === "ACTIVE" && <button onClick={() => deactivate(selected.id)} className="flex-1 bg-red-600 text-white rounded-lg py-2 text-sm">Deactivate</button>}
+              </div>
+            )}
             <button onClick={() => setSelected(null)} className="w-full border border-zinc-300 rounded-lg py-2 text-sm">Close</button>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-3">
+            <h2 className="font-semibold">Edit contact</h2>
+            <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <input value={editing.department} onChange={e => setEditing({ ...editing, department: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <input value={editing.position} onChange={e => setEditing({ ...editing, position: e.target.value })} className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <input value={editing.email || ""} onChange={e => setEditing({ ...editing, email: e.target.value })} placeholder="Email" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <input value={editing.location || ""} onChange={e => setEditing({ ...editing, location: e.target.value })} placeholder="Location" className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
+            <div className="flex gap-2">
+              <button onClick={() => setEditing(null)} className="flex-1 border border-zinc-300 rounded-lg py-2 text-sm">Cancel</button>
+              <button onClick={saveEdit} className="flex-1 bg-zinc-900 text-white rounded-lg py-2 text-sm">Save</button>
+            </div>
           </div>
         </div>
       )}

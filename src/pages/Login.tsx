@@ -4,8 +4,8 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const [username, setUsername] = useState("budi");
-  const [password, setPassword] = useState("budi123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -43,7 +43,6 @@ export default function Login() {
         <button disabled={loading} className="w-full bg-zinc-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-zinc-800 disabled:opacity-50">
           {loading ? "Signing in..." : "Sign in"}
         </button>
-        <p className="text-xs text-zinc-500">Try budi/budi123 (Admin) or siti/siti123 (User)</p>
       </form>
     </div>
   );

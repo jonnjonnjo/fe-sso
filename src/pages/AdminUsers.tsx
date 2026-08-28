@@ -9,6 +9,9 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20 });
   const [form, setForm] = useState({ username: "", password: "" });
   const [editing, setEditing] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ username: "", activeStatus: "ACTIVE", roleId: "" });
@@ -16,13 +19,14 @@ export default function AdminUsers() {
   const load = async () => {
     setLoading(true);
     try {
-      const [uRes, rRes] = await Promise.all([api.get("/users", { params: { q: q || undefined } }), api.get("/roles")]);
+      const [uRes, rRes] = await Promise.all([api.get("/users", { params: { q: q || undefined, page, limit } }), api.get("/roles")]);
       setUsers(uRes.data.data);
+      setMeta(uRes.data.meta);
       setRoles(rRes.data.data);
     } finally { setLoading(false); }
   };
-  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [q]);
-  useEffect(() => { load(); }, []);
+  useEffect(() => { const t = setTimeout(() => { setPage(1); load(); }, 300); return () => clearTimeout(t); }, [q, limit]);
+  useEffect(() => { load(); }, [page]);
 
   const create = async () => {
     if (!form.username.trim() || !form.password.trim()) {
@@ -95,6 +99,22 @@ export default function AdminUsers() {
             {!loading && users.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-zinc-500">No users</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm border-t border-zinc-200 pt-3">
+        <div className="flex items-center gap-2">
+          <span className="text-zinc-500">Total {meta.total} · Page {meta.page} of {Math.ceil(meta.total / meta.limit) || 1}</span>
+          <span className="text-zinc-300">·</span>
+          <label className="text-zinc-500">Show</label>
+          <select value={limit} onChange={e => { setLimit(parseInt(e.target.value)); setPage(1); }} className="border border-zinc-300 rounded-lg px-2 py-1 text-sm bg-white">
+            <option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">‹ Prev</button>
+          <span className="px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-medium">{meta.page}</span>
+          <button disabled={page * meta.limit >= meta.total} onClick={() => setPage(p => p + 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next ›</button>
+        </div>
       </div>
 
       {editing && (

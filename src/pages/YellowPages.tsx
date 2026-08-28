@@ -119,20 +119,19 @@ export default function YellowPages() {
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm border-t border-zinc-200 pt-3">
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500">Total {meta.total}</span>
+          <span className="text-zinc-500">Total {meta.total} · Page {meta.page} of {Math.ceil(meta.total / meta.limit) || 1}</span>
           <span className="text-zinc-300">·</span>
           <label className="text-zinc-500">Show</label>
-          <select value={limit} onChange={e => { setLimit(parseInt(e.target.value)); setPage(1); }} className="border border-zinc-300 rounded-lg px-2 py-1 text-sm">
+          <select value={limit} onChange={e => { setLimit(parseInt(e.target.value)); setPage(1); }} className="border border-zinc-300 rounded-lg px-2 py-1 text-sm bg-white">
             <option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
           </select>
-          <span className="text-zinc-500">per page</span>
         </div>
-        <div className="flex gap-2">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 disabled:opacity-50">Prev</button>
-          <span className="px-3 py-1.5">Page {meta.page}</span>
-          <button disabled={page * meta.limit >= meta.total} onClick={() => setPage(p => p + 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 disabled:opacity-50">Next</button>
+        <div className="flex items-center gap-1">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">‹ Prev</button>
+          <span className="px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-medium">{meta.page}</span>
+          <button disabled={page * meta.limit >= meta.total} onClick={() => setPage(p => p + 1)} className="border border-zinc-300 rounded-lg px-3 py-1.5 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed">Next ›</button>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ export default function AdminApps() {
   const [url, setUrl] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [userQuery, setUserQuery] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
   const [userApps, setUserApps] = useState<App[]>([]);
   const [grantAppId, setGrantAppId] = useState("");
 
@@ -80,15 +81,17 @@ export default function AdminApps() {
             <input
               placeholder="Search user by name"
               value={userQuery}
-              onChange={e => setUserQuery(e.target.value)}
+              onChange={e => { setUserQuery(e.target.value); setShowPicker(true); }}
+              onFocus={() => setShowPicker(true)}
+              onBlur={() => setTimeout(() => setShowPicker(false), 150)}
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm"
             />
-            {userQuery && (
+            {showPicker && userQuery && (
               <div className="absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow max-h-40 overflow-auto">
                 {users.filter(u => u.username.toLowerCase().includes(userQuery.toLowerCase())).slice(0, 8).map(u => (
                   <button
                     key={u.id}
-                    onClick={() => { setSelectedUser(u.id); setUserQuery(""); }}
+                    onMouseDown={() => { setSelectedUser(u.id); setUserQuery(u.username); setShowPicker(false); }}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 ${selectedUser === u.id ? "bg-zinc-100" : ""}`}
                   >
                     {u.username}

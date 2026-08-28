@@ -19,6 +19,8 @@ npm install
 npm run dev
 ```
 
+App at `http://localhost:5173` when running (BE at `http://localhost:3000`, docs at `http://localhost:3000/docs`).
+
 ## Env
 
 See `.env.example`:
